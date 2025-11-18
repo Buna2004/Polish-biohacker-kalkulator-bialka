@@ -224,7 +224,7 @@
       <tr>
         <th>Wariant dnia</th>
         <th>Limit kcal</th>
-        <th>Kcal z białka</th>
+        <th>Kcal z posiłku</th> 
         <th>Zostaje na inne jedzenie</th>
       </tr>
       </thead>
@@ -256,13 +256,17 @@
 </div>
 
 <script>
-  // --- KONFIGURACJA – możesz zmienić pod siebie ---
-  const PROTEIN_PER_KG = 2;            // g białka na kg masy ciała
-  const PROTEIN_PER_EGG = 6;           // g białka w 1 jajku
-  const PROTEIN_PER_100G_MEAT = 25;    // g białka w 100 g mięsa
-  const KCAL_PER_GRAM_PROT = 4;        // kcal z 1 g białka
-  const KCAL_PER_KG_REST = 28;         // kcal / kg bez treningu
-  const KCAL_PER_KG_ACTIVE = 31;       // kcal / kg lekka aktywność
+  // --- KONFIGURACJA ---
+  const PROTEIN_PER_KG = 2;             // g białka na kg masy ciała
+  const PROTEIN_PER_EGG = 6;            // g białka w 1 jajku
+  const PROTEIN_PER_100G_MEAT = 25;     // g białka w 100 g mięsa
+
+  const KCAL_PER_GRAM_PROT = 4;         // kcal z 1 g białka
+  const KCAL_PER_EGG_TOTAL = 70;        // kcal z całego jajka
+  const KCAL_PER_100G_MEAT_TOTAL = 250; // kcal z 100 g wołowiny
+
+  const KCAL_PER_KG_REST = 28;          // kcal / kg bez treningu
+  const KCAL_PER_KG_ACTIVE = 31;        // kcal / kg lekka aktywność
 
   function round(value, decimals = 0) {
     const factor = Math.pow(10, decimals);
@@ -297,33 +301,39 @@
       statusText = `<span class="ok">Masz nadwyżkę ~${surplus} g białka ponad 2 g/kg.</span>`;
     }
 
-    // Kalorie z białka
+    // Kalorie: białko i całe jedzenie
     const kcalFromProtein = proteinTotal * KCAL_PER_GRAM_PROT;
+    const kcalFromEggsTotal = eggs * KCAL_PER_EGG_TOTAL;
+    const kcalFromMeatTotal = (meat / 100) * KCAL_PER_100G_MEAT_TOTAL;
+    const kcalFromFoodTotal = kcalFromEggsTotal + kcalFromMeatTotal;
 
     // Limity kcal
     const kcalRest = weight * KCAL_PER_KG_REST;
     const kcalActive = weight * KCAL_PER_KG_ACTIVE;
 
-    // Ile zostaje na inne jedzenie
-    const kcalLeftRest = kcalRest - kcalFromProtein;
-    const kcalLeftActive = kcalActive - kcalFromProtein;
+    // Ile zostaje na inne jedzenie (odejmujemy całe kalorie posiłku)
+    const kcalLeftRest = kcalRest - kcalFromFoodTotal;
+    const kcalLeftActive = kcalActive - kcalFromFoodTotal;
 
-    // Podsumowanie białka
+    // Podsumowanie białka + kalorii
     const proteinSummary = `
       Zapotrzebowanie: <span class="highlight">${round(proteinNeed, 1)} g</span> białka (2 g/kg).<br>
       Zjadłeś z jajek: <span class="highlight">${round(proteinFromEggs, 1)} g</span>, 
       z mięsa: <span class="highlight">${round(proteinFromMeat, 1)} g</span>.<br>
       Razem: <span class="highlight">${round(proteinTotal, 1)} g</span> białka 
-      (~${round(kcalFromProtein, 0)} kcal z samego białka).
+      (~${round(kcalFromProtein, 0)} kcal z samego białka).<br>
+      Kalorie z jedzenia (jajka + mięso): 
+      <span class="highlight">${round(kcalFromFoodTotal, 0)} kcal</span>.
     `;
 
     document.getElementById('proteinSummary').innerHTML = proteinSummary;
     document.getElementById('proteinStatus').innerHTML = statusText;
 
+    // Tabela – używamy pełnych kcal z posiłku
     document.getElementById('kcalRest').textContent = round(kcalRest, 0);
     document.getElementById('kcalActive').textContent = round(kcalActive, 0);
-    document.getElementById('kcalFromProteinRest').textContent = round(kcalFromProtein, 0);
-    document.getElementById('kcalFromProteinActive').textContent = round(kcalFromProtein, 0);
+    document.getElementById('kcalFromProteinRest').textContent = round(kcalFromFoodTotal, 0);
+    document.getElementById('kcalFromProteinActive').textContent = round(kcalFromFoodTotal, 0);
     document.getElementById('kcalLeftRest').textContent = round(kcalLeftRest, 0);
     document.getElementById('kcalLeftActive').textContent = round(kcalLeftActive, 0);
 
